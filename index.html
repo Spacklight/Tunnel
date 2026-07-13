@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hello Tunnel</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px 40px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    text-align: center;
+    max-width: 400px;
+  }
+  h1 { font-size: 22px; margin-bottom: 8px; }
+  p { color: #666; font-size: 14px; margin: 4px 0; }
+  .message { font-size: 20px; font-weight: 600; color: #2563eb; margin: 16px 0; }
+  .status { font-size: 12px; color: #999; margin-top: 16px; }
+  button {
+    margin-top: 16px; padding: 8px 16px; border: 1px solid #ddd; background: #fafafa;
+    border-radius: 8px; cursor: pointer; font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Termux Hello Tunnel</h1>
+  <p>This page connects to a live Node.js server running on a phone via Cloudflare Tunnel.</p>
+  <div class="message" id="message">Loading...</div>
+  <div class="status" id="status"></div>
+  <button onclick="loadHello()">Refresh</button>
+</div>
+
+<script>
+  // Points at the tunnel.json file this repo's manager.js keeps updated.
+  const TUNNEL_JSON_URL = "https://raw.githubusercontent.com/Spacklight/Tunnel/main/config/tunnel.json";
+
+  async function loadHello() {
+    const messageEl = document.getElementById("message");
+    const statusEl = document.getElementById("status");
+    messageEl.textContent = "Loading...";
+    statusEl.textContent = "";
+
+    try {
+      // Step 1: find out the current tunnel URL (changes over time)
+      const tunnelRes = await fetch(TUNNEL_JSON_URL + "?t=" + Date.now()); // cache-bust
+      if (!tunnelRes.ok) throw new Error("Could not read tunnel.json");
+      const tunnelData = await tunnelRes.json();
+
+      // Step 2: call the /hello endpoint on that tunnel URL
+      const helloRes = await fetch(tunnelData.url + "/hello");
+      if (!helloRes.ok) throw new Error("Phone server did not respond");
+      const helloData = await helloRes.json();
+
+      messageEl.textContent = helloData.message;
+      statusEl.textContent = `Connected via ${tunnelData.url} — last tunnel update: ${new Date(tunnelData.updated).toLocaleString()}`;
+    } catch (err) {
+      messageEl.textContent = "Could not reach the phone.";
+      statusEl.textContent = "Error: " + err.message + " (make sure manager.js is running in Termux)";
+    }
+  }
+
+  loadHello();
+</script>
+
+</body>
+</html>
