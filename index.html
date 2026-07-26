@@ -6,10 +6,7 @@
 <title>Gini AI</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body {
-    height: 100%;
-    margin: 0;
-  }
+  html, body { height: 100%; margin: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: linear-gradient(180deg, #0f0a2e 0%, #1a1147 30%, #2d1b69 60%, #3d1f7a 100%);
@@ -29,11 +26,7 @@
     align-items: center;
     flex-shrink: 0;
   }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+  .logo { display: flex; align-items: center; gap: 8px; }
   .logo-icon {
     width: 28px; height: 28px;
     background: linear-gradient(135deg, #6d5bff 0%, #d946ef 100%);
@@ -44,12 +37,9 @@
   }
   .logo-icon svg { width: 16px; height: 16px; }
   .logo h1 {
-    font-size: 17px;
-    margin: 0;
+    font-size: 17px; margin: 0;
     background: linear-gradient(90deg, #fff, #d9c9ff);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
     font-weight: 700;
   }
   #statusDot {
@@ -61,26 +51,12 @@
   #statusText { font-size: 12px; color: #b8aee0; }
 
   #chatArea {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 16px;
-    max-width: 700px;
-    width: 100%;
-    margin: 0 auto;
-  }
-  #chatArea:empty::before {
-    content: "";
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 16px; max-width: 700px; width: 100%; margin: 0 auto;
   }
   .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    height: 100%;
-    color: #b8aee0;
-    padding: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; height: 100%; color: #b8aee0; padding: 20px;
   }
   .empty-state .mascot {
     width: 72px; height: 72px;
@@ -91,58 +67,31 @@
     margin-bottom: 16px;
   }
   .empty-state .mascot svg { width: 40px; height: 40px; }
-  .empty-state h2 {
-    color: #fff;
-    font-size: 20px;
-    margin: 0 0 6px 0;
-  }
-  .empty-state p {
-    font-size: 13px;
-    margin: 0;
-    color: #9d90c9;
-  }
+  .empty-state h2 { color: #fff; font-size: 20px; margin: 0 0 6px 0; }
+  .empty-state p { font-size: 13px; margin: 0; color: #9d90c9; }
 
   .msg {
-    max-width: 85%;
-    padding: 10px 14px;
-    border-radius: 14px;
-    margin-bottom: 10px;
-    font-size: 15px;
-    white-space: pre-wrap;
-    line-height: 1.45;
-    word-wrap: break-word;
+    max-width: 85%; padding: 10px 14px; border-radius: 14px; margin-bottom: 10px;
+    font-size: 15px; white-space: pre-wrap; line-height: 1.45; word-wrap: break-word;
   }
   .msg.user {
     background: linear-gradient(135deg, #6d5bff 0%, #9333ea 100%);
-    color: #fff;
-    margin-left: auto;
-    border-bottom-right-radius: 3px;
+    color: #fff; margin-left: auto; border-bottom-right-radius: 3px;
     box-shadow: 0 2px 10px rgba(109, 91, 255, 0.3);
   }
   .msg.ai {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: #f0ecff;
-    margin-right: auto;
-    border-bottom-left-radius: 3px;
-    backdrop-filter: blur(6px);
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: #f0ecff; margin-right: auto; border-bottom-left-radius: 3px;
+    backdrop-filter: blur(6px); max-width: 92%;
   }
-  .msg.ai.streaming::after {
-    content: "▍";
-    color: #d946ef;
-    animation: blink 1s step-start infinite;
+  .msg.ai.streaming .cursor::after {
+    content: "▍"; color: #d946ef; animation: blink 1s step-start infinite;
   }
   @keyframes blink { 50% { opacity: 0; } }
 
-  .thinking {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 0;
-  }
+  .thinking { display: inline-flex; align-items: center; gap: 4px; padding: 2px 0; }
   .thinking span {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: #d946ef;
+    width: 6px; height: 6px; border-radius: 50%; background: #d946ef;
     animation: pulse 1.2s infinite ease-in-out;
   }
   .thinking span:nth-child(2) { animation-delay: 0.2s; }
@@ -152,56 +101,86 @@
     30% { opacity: 1; transform: scale(1); }
   }
 
-  form {
+  /* ---- Code block styling ---- */
+  .code-block {
+    margin: 8px 0;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: #14102b;
+  }
+  .code-block-header {
     display: flex;
-    align-items: flex-end;
-    gap: 8px;
-    padding: 10px 16px;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0) + 10px);
-    background: rgba(15, 10, 46, 0.85);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255,255,255,0.1);
-    max-width: 700px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.05);
+    font-size: 12px;
+    color: #b8aee0;
+    font-family: -apple-system, sans-serif;
+  }
+  .code-block-lang { text-transform: uppercase; letter-spacing: 0.5px; }
+  .code-block-actions { display: flex; gap: 6px; }
+  .code-btn {
+    background: rgba(217, 70, 239, 0.15);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    color: #e9d5ff;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .code-btn:active { background: rgba(217, 70, 239, 0.3); }
+  .code-block pre {
+    margin: 0;
+    padding: 12px;
+    overflow-x: auto;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #e5e0ff;
+    white-space: pre;
+  }
+  .code-preview-frame {
     width: 100%;
-    margin: 0 auto;
-    box-sizing: border-box;
-    flex-shrink: 0;
+    height: 300px;
+    border: none;
+    background: #fff;
+    display: none;
+  }
+  .code-preview-frame.active { display: block; }
+
+  form {
+    display: flex; align-items: flex-end; gap: 8px;
+    padding: 10px 16px; padding-bottom: calc(env(safe-area-inset-bottom, 0) + 10px);
+    background: rgba(15, 10, 46, 0.85); backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    max-width: 700px; width: 100%; margin: 0 auto; box-sizing: border-box; flex-shrink: 0;
   }
   textarea {
-    flex: 1;
-    resize: none;
-    border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.06);
-    color: #fff;
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 16px; /* prevents iOS Safari auto-zoom on focus */
-    font-family: inherit;
-    max-height: 120px;
-    min-height: 42px;
+    flex: 1; resize: none; border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06); color: #fff; border-radius: 10px;
+    padding: 10px 12px; font-size: 16px; font-family: inherit;
+    max-height: 120px; min-height: 42px;
   }
   textarea::placeholder { color: #9d90c9; }
   textarea:focus { outline: none; border-color: #d946ef; }
 
-  button {
-    padding: 0 18px;
-    height: 42px;
+  button.send {
+    padding: 0 18px; height: 42px;
     background: linear-gradient(135deg, #6d5bff 0%, #d946ef 100%);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    flex-shrink: 0;
+    color: #fff; border: none; border-radius: 10px; cursor: pointer;
+    font-size: 14px; font-weight: 600; flex-shrink: 0;
     box-shadow: 0 2px 10px rgba(217, 70, 239, 0.35);
   }
-  button:disabled { background: #4b4570; box-shadow: none; cursor: not-allowed; }
+  button.send:disabled { background: #4b4570; box-shadow: none; cursor: not-allowed; }
 
   @media (max-width: 480px) {
     .logo h1 { font-size: 15px; }
-    .msg { max-width: 90%; font-size: 14px; }
-    button { padding: 0 14px; }
+    .msg { max-width: 92%; font-size: 14px; }
+    button.send { padding: 0 14px; }
+    .code-block pre { font-size: 12px; }
   }
 </style>
 </head>
@@ -237,7 +216,7 @@
 
 <form id="chatForm">
   <textarea id="messageInput" placeholder="Message Gini AI..." rows="1"></textarea>
-  <button type="submit" id="sendBtn">Send</button>
+  <button type="submit" class="send" id="sendBtn">Send</button>
 </form>
 
 <script>
@@ -256,11 +235,112 @@
     if (emptyState) emptyState.remove();
   }
 
+  function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // Detects ```lang ... ``` fenced blocks and text in between, and renders
+  // each piece appropriately (plain text vs formatted code block).
+  function renderMessageContent(container, rawText) {
+    container.innerHTML = "";
+    const fenceRegex = /```(\w*)\n?([\s\S]*?)```/g;
+    let lastIndex = 0;
+    let match;
+    let blockCount = 0;
+
+    while ((match = fenceRegex.exec(rawText)) !== null) {
+      // Plain text before this code block
+      if (match.index > lastIndex) {
+        const textNode = document.createElement("span");
+        textNode.textContent = rawText.slice(lastIndex, match.index);
+        container.appendChild(textNode);
+      }
+
+      const lang = (match[1] || "code").trim();
+      const code = match[2];
+      blockCount++;
+      const blockId = `code-${Date.now()}-${blockCount}`;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "code-block";
+
+      const isFullHtmlPage = /<html[\s>]/i.test(code);
+
+      wrapper.innerHTML = `
+        <div class="code-block-header">
+          <span class="code-block-lang">${escapeHtml(lang || "code")}</span>
+          <div class="code-block-actions">
+            ${isFullHtmlPage ? `<button type="button" class="code-btn" data-action="preview" data-target="${blockId}">Preview</button>` : ""}
+            <button type="button" class="code-btn" data-action="copy" data-target="${blockId}">Copy</button>
+          </div>
+        </div>
+        <pre><code id="${blockId}">${escapeHtml(code)}</code></pre>
+        ${isFullHtmlPage ? `<iframe class="code-preview-frame" id="${blockId}-frame"></iframe>` : ""}
+      `;
+      container.appendChild(wrapper);
+
+      lastIndex = fenceRegex.lastIndex;
+    }
+
+    // Remaining plain text after the last code block
+    if (lastIndex < rawText.length) {
+      const textNode = document.createElement("span");
+      textNode.className = "cursor";
+      textNode.textContent = rawText.slice(lastIndex);
+      container.appendChild(textNode);
+    } else if (blockCount === 0) {
+      // No code blocks at all — whole message is plain streaming text
+      const textNode = document.createElement("span");
+      textNode.className = "cursor";
+      textNode.textContent = rawText;
+      container.appendChild(textNode);
+    }
+  }
+
+  // Event delegation for Copy / Preview buttons inside any message
+  chatArea.addEventListener("click", (e) => {
+    const btn = e.target.closest(".code-btn");
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const targetId = btn.dataset.target;
+
+    if (action === "copy") {
+      const codeEl = document.getElementById(targetId);
+      navigator.clipboard.writeText(codeEl.textContent).then(() => {
+        const original = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      });
+    }
+
+    if (action === "preview") {
+      const codeEl = document.getElementById(targetId);
+      const frame = document.getElementById(targetId + "-frame");
+      const pre = codeEl.closest("pre");
+      const isActive = frame.classList.contains("active");
+
+      if (isActive) {
+        frame.classList.remove("active");
+        pre.style.display = "block";
+        btn.textContent = "Preview";
+      } else {
+        frame.srcdoc = codeEl.textContent;
+        frame.classList.add("active");
+        pre.style.display = "none";
+        btn.textContent = "Show Code";
+      }
+    }
+  });
+
   function addMessage(role, text) {
     removeEmptyState();
     const div = document.createElement("div");
     div.className = `msg ${role}`;
-    div.textContent = text;
+    if (role === "user") {
+      div.textContent = text;
+    } else {
+      renderMessageContent(div, text);
+    }
     chatArea.appendChild(div);
     chatArea.scrollTop = chatArea.scrollHeight;
     return div;
@@ -294,6 +374,7 @@
     addMessage("user", message);
     const aiDiv = addThinkingBubble();
     let hasStartedStreaming = false;
+    let fullText = "";
 
     sendBtn.disabled = true;
 
@@ -335,7 +416,9 @@
               aiDiv.classList.add("streaming");
               hasStartedStreaming = true;
             }
-            aiDiv.textContent += text;
+            fullText += text;
+            // Re-render on every chunk so code fences get formatted live as they complete
+            renderMessageContent(aiDiv, fullText);
             chatArea.scrollTop = chatArea.scrollHeight;
           }
         }
