@@ -12,14 +12,16 @@
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #f4f5f7;
+    background: linear-gradient(180deg, #0f0a2e 0%, #1a1147 30%, #2d1b69 60%, #3d1f7a 100%);
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
+
   header {
-    background: #fff;
-    border-bottom: 1px solid #e5e5e5;
+    background: rgba(15, 10, 46, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
     padding: env(safe-area-inset-top, 0) 16px 12px 16px;
     padding-top: calc(env(safe-area-inset-top, 0) + 12px);
     display: flex;
@@ -27,14 +29,36 @@
     align-items: center;
     flex-shrink: 0;
   }
-  header h1 { font-size: 16px; margin: 0; }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #6d5bff 0%, #d946ef 100%);
+    border-radius: 50% 50% 50% 8px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 12px rgba(217, 70, 239, 0.5);
+    flex-shrink: 0;
+  }
+  .logo-icon svg { width: 16px; height: 16px; }
+  .logo h1 {
+    font-size: 17px;
+    margin: 0;
+    background: linear-gradient(90deg, #fff, #d9c9ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 700;
+  }
   #statusDot {
-    width: 8px; height: 8px; border-radius: 50%; background: #94a3b8;
+    width: 8px; height: 8px; border-radius: 50%; background: #6b7280;
     display: inline-block; margin-right: 6px;
   }
-  #statusDot.online { background: #22c55e; }
-  #statusDot.offline { background: #dc2626; }
-  #statusText { font-size: 12px; color: #666; }
+  #statusDot.online { background: #34d399; box-shadow: 0 0 6px #34d399; }
+  #statusDot.offline { background: #f87171; }
+  #statusText { font-size: 12px; color: #b8aee0; }
 
   #chatArea {
     flex: 1;
@@ -45,6 +69,39 @@
     width: 100%;
     margin: 0 auto;
   }
+  #chatArea:empty::before {
+    content: "";
+  }
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 100%;
+    color: #b8aee0;
+    padding: 20px;
+  }
+  .empty-state .mascot {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, #6d5bff 0%, #d946ef 100%);
+    border-radius: 50% 50% 50% 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 30px rgba(217, 70, 239, 0.4);
+    margin-bottom: 16px;
+  }
+  .empty-state .mascot svg { width: 40px; height: 40px; }
+  .empty-state h2 {
+    color: #fff;
+    font-size: 20px;
+    margin: 0 0 6px 0;
+  }
+  .empty-state p {
+    font-size: 13px;
+    margin: 0;
+    color: #9d90c9;
+  }
+
   .msg {
     max-width: 85%;
     padding: 10px 14px;
@@ -56,19 +113,23 @@
     word-wrap: break-word;
   }
   .msg.user {
-    background: #2563eb;
+    background: linear-gradient(135deg, #6d5bff 0%, #9333ea 100%);
     color: #fff;
     margin-left: auto;
     border-bottom-right-radius: 3px;
+    box-shadow: 0 2px 10px rgba(109, 91, 255, 0.3);
   }
   .msg.ai {
-    background: #fff;
-    border: 1px solid #eee;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #f0ecff;
     margin-right: auto;
     border-bottom-left-radius: 3px;
+    backdrop-filter: blur(6px);
   }
   .msg.ai.streaming::after {
     content: "▍";
+    color: #d946ef;
     animation: blink 1s step-start infinite;
   }
   @keyframes blink { 50% { opacity: 0; } }
@@ -81,7 +142,7 @@
   }
   .thinking span {
     width: 6px; height: 6px; border-radius: 50%;
-    background: #999;
+    background: #d946ef;
     animation: pulse 1.2s infinite ease-in-out;
   }
   .thinking span:nth-child(2) { animation-delay: 0.2s; }
@@ -97,8 +158,9 @@
     gap: 8px;
     padding: 10px 16px;
     padding-bottom: calc(env(safe-area-inset-bottom, 0) + 10px);
-    background: #fff;
-    border-top: 1px solid #e5e5e5;
+    background: rgba(15, 10, 46, 0.85);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255,255,255,0.1);
     max-width: 700px;
     width: 100%;
     margin: 0 auto;
@@ -108,30 +170,36 @@
   textarea {
     flex: 1;
     resize: none;
-    border: 1px solid #ddd;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06);
+    color: #fff;
     border-radius: 10px;
     padding: 10px 12px;
-    font-size: 16px; /* 16px prevents iOS Safari auto-zoom on focus */
+    font-size: 16px; /* prevents iOS Safari auto-zoom on focus */
     font-family: inherit;
     max-height: 120px;
     min-height: 42px;
   }
+  textarea::placeholder { color: #9d90c9; }
+  textarea:focus { outline: none; border-color: #d946ef; }
+
   button {
     padding: 0 18px;
     height: 42px;
-    background: #2563eb;
+    background: linear-gradient(135deg, #6d5bff 0%, #d946ef 100%);
     color: #fff;
     border: none;
     border-radius: 10px;
     cursor: pointer;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(217, 70, 239, 0.35);
   }
-  button:disabled { background: #94a3b8; cursor: not-allowed; }
+  button:disabled { background: #4b4570; box-shadow: none; cursor: not-allowed; }
 
   @media (max-width: 480px) {
-    header h1 { font-size: 15px; }
+    .logo h1 { font-size: 15px; }
     .msg { max-width: 90%; font-size: 14px; }
     button { padding: 0 14px; }
   }
@@ -140,11 +208,32 @@
 <body>
 
 <header>
-  <h1>Gini AI</h1>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="10" r="1.2" fill="white"/>
+        <circle cx="15" cy="10" r="1.2" fill="white"/>
+        <path d="M8 14C8 14 9.5 15.5 12 15.5C14.5 15.5 16 14 16 14" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1>GiniAi</h1>
+  </div>
   <span><span id="statusDot"></span><span id="statusText">Connecting...</span></span>
 </header>
 
-<div id="chatArea"></div>
+<div id="chatArea">
+  <div class="empty-state" id="emptyState">
+    <div class="mascot">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="10" r="1.4" fill="white"/>
+        <circle cx="15" cy="10" r="1.4" fill="white"/>
+        <path d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h2>Your Smart AI Assistant</h2>
+    <p>Ask me anything to get started</p>
+  </div>
+</div>
 
 <form id="chatForm">
   <textarea id="messageInput" placeholder="Message Gini AI..." rows="1"></textarea>
@@ -156,13 +245,19 @@
   let tunnelUrl = null;
 
   const chatArea = document.getElementById("chatArea");
+  const emptyState = document.getElementById("emptyState");
   const form = document.getElementById("chatForm");
   const input = document.getElementById("messageInput");
   const sendBtn = document.getElementById("sendBtn");
   const statusDot = document.getElementById("statusDot");
   const statusText = document.getElementById("statusText");
 
+  function removeEmptyState() {
+    if (emptyState) emptyState.remove();
+  }
+
   function addMessage(role, text) {
+    removeEmptyState();
     const div = document.createElement("div");
     div.className = `msg ${role}`;
     div.textContent = text;
@@ -228,7 +323,7 @@
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n\n");
-        buffer = lines.pop(); // keep incomplete chunk for next read
+        buffer = lines.pop();
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
@@ -236,7 +331,6 @@
             if (text === "[DONE]") continue;
 
             if (!hasStartedStreaming) {
-              // First token arrived — replace the thinking dots with real text
               aiDiv.innerHTML = "";
               aiDiv.classList.add("streaming");
               hasStartedStreaming = true;
@@ -249,7 +343,7 @@
     } catch (err) {
       aiDiv.classList.remove("streaming");
       aiDiv.textContent = "Error: " + err.message + " — trying to reconnect...";
-      await refreshTunnelUrl(); // tunnel URL may have changed, refresh for next try
+      await refreshTunnelUrl();
     } finally {
       aiDiv.classList.remove("streaming");
       sendBtn.disabled = false;
