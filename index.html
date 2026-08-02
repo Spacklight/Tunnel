@@ -2,461 +2,583 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<title>Gini AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transmission — MIMO + GiniAi Uplink</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; margin: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(180deg, #0f0a2e 0%, #1a1147 30%, #2d1b69 60%, #3d1f7a 100%);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  :root{
+    --bg:#0b0f0e;
+    --panel:#12181a;
+    --panel-raised:#161e20;
+    --panel-raised-2:#1b2426;
+    --border:#223028;
+    --text:#e8f0ec;
+    --text-dim:#8ba39a;
+    --mimo:#7aa2ff;
+    --mimo-dim:#2a3a5c;
+    --gini:#3ddc84;
+    --gini-dim:#1c3a2e;
+    --amber:#f5a623;
+    --red:#ff5c5c;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
   }
 
-  header {
-    background: rgba(15, 10, 46, 0.85);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding: env(safe-area-inset-top, 0) 16px 12px 16px;
-    padding-top: calc(env(safe-area-inset-top, 0) + 12px);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  .logo { display: flex; align-items: center; gap: 8px; }
-  .logo-icon {
-    width: 28px; height: 28px;
-    background: linear-gradient(135deg, #6d5bff 0%, #d946ef 100%);
-    border-radius: 50% 50% 50% 8px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 12px rgba(217, 70, 239, 0.5);
-    flex-shrink: 0;
-  }
-  .logo-icon svg { width: 16px; height: 16px; }
-  .logo h1 {
-    font-size: 17px; margin: 0;
-    background: linear-gradient(90deg, #fff, #d9c9ff);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    font-weight: 700;
-  }
-  #statusDot {
-    width: 8px; height: 8px; border-radius: 50%; background: #6b7280;
-    display: inline-block; margin-right: 6px;
-  }
-  #statusDot.online { background: #34d399; box-shadow: 0 0 6px #34d399; }
-  #statusDot.offline { background: #f87171; }
-  #statusText { font-size: 12px; color: #b8aee0; }
+  *{box-sizing:border-box;}
 
-  #chatArea {
-    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding: 16px; max-width: 700px; width: 100%; margin: 0 auto;
-  }
-  .empty-state {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; height: 100%; color: #b8aee0; padding: 20px;
-  }
-  .empty-state .mascot {
-    width: 72px; height: 72px;
-    background: linear-gradient(135deg, #6d5bff 0%, #d946ef 100%);
-    border-radius: 50% 50% 50% 12px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 30px rgba(217, 70, 239, 0.4);
-    margin-bottom: 16px;
-  }
-  .empty-state .mascot svg { width: 40px; height: 40px; }
-  .empty-state h2 { color: #fff; font-size: 20px; margin: 0 0 6px 0; }
-  .empty-state p { font-size: 13px; margin: 0; color: #9d90c9; }
+  html,body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font-family:var(--sans); }
 
-  .msg {
-    max-width: 85%; padding: 10px 14px; border-radius: 14px; margin-bottom: 10px;
-    font-size: 15px; white-space: pre-wrap; line-height: 1.45; word-wrap: break-word;
-  }
-  .msg.user {
-    background: linear-gradient(135deg, #6d5bff 0%, #9333ea 100%);
-    color: #fff; margin-left: auto; border-bottom-right-radius: 3px;
-    box-shadow: 0 2px 10px rgba(109, 91, 255, 0.3);
-  }
-  .msg.ai {
-    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-    color: #f0ecff; margin-right: auto; border-bottom-left-radius: 3px;
-    backdrop-filter: blur(6px); max-width: 92%;
-  }
-  .msg.ai.streaming .cursor::after {
-    content: "▍"; color: #d946ef; animation: blink 1s step-start infinite;
-  }
-  @keyframes blink { 50% { opacity: 0; } }
-
-  .thinking { display: inline-flex; align-items: center; gap: 4px; padding: 2px 0; }
-  .thinking span {
-    width: 6px; height: 6px; border-radius: 50%; background: #d946ef;
-    animation: pulse 1.2s infinite ease-in-out;
-  }
-  .thinking span:nth-child(2) { animation-delay: 0.2s; }
-  .thinking span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes pulse {
-    0%, 60%, 100% { opacity: 0.3; transform: scale(0.85); }
-    30% { opacity: 1; transform: scale(1); }
+  body{
+    background-image:repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    display:flex; flex-direction:column; height:100vh; overflow:hidden;
   }
 
-  /* ---- Code block styling ---- */
-  .code-block {
-    margin: 8px 0;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: #14102b;
+  /* ---------- Header ---------- */
+  header{
+    flex:0 0 auto;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 20px; border-bottom:1px solid var(--border); background:var(--panel);
+    flex-wrap:wrap; gap:10px;
   }
-  .code-block-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 10px;
-    background: rgba(255,255,255,0.05);
-    font-size: 12px;
-    color: #b8aee0;
-    font-family: -apple-system, sans-serif;
-  }
-  .code-block-lang { text-transform: uppercase; letter-spacing: 0.5px; }
-  .code-block-actions { display: flex; gap: 6px; }
-  .code-btn {
-    background: rgba(217, 70, 239, 0.15);
-    border: 1px solid rgba(217, 70, 239, 0.3);
-    color: #e9d5ff;
-    font-size: 11px;
-    padding: 3px 9px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-  }
-  .code-btn:active { background: rgba(217, 70, 239, 0.3); }
-  .code-block pre {
-    margin: 0;
-    padding: 12px;
-    overflow-x: auto;
-    font-family: "SF Mono", Menlo, Consolas, monospace;
-    font-size: 13px;
-    line-height: 1.5;
-    color: #e5e0ff;
-    white-space: pre;
-  }
-  .code-preview-frame {
-    width: 100%;
-    height: 300px;
-    border: none;
-    background: #fff;
-    display: none;
-  }
-  .code-preview-frame.active { display: block; }
 
-  form {
-    display: flex; align-items: flex-end; gap: 8px;
-    padding: 10px 16px; padding-bottom: calc(env(safe-area-inset-bottom, 0) + 10px);
-    background: rgba(15, 10, 46, 0.85); backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255,255,255,0.1);
-    max-width: 700px; width: 100%; margin: 0 auto; box-sizing: border-box; flex-shrink: 0;
-  }
-  textarea {
-    flex: 1; resize: none; border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.06); color: #fff; border-radius: 10px;
-    padding: 10px 12px; font-size: 16px; font-family: inherit;
-    max-height: 120px; min-height: 42px;
-  }
-  textarea::placeholder { color: #9d90c9; }
-  textarea:focus { outline: none; border-color: #d946ef; }
+  .brand{ display:flex; flex-direction:column; gap:2px; }
+  .brand .title{ font-family:var(--mono); font-weight:700; font-size:15px; letter-spacing:0.12em; }
+  .brand .sub{ font-family:var(--mono); font-size:10px; letter-spacing:0.08em; color:var(--text-dim); }
 
-  button.send {
-    padding: 0 18px; height: 42px;
-    background: linear-gradient(135deg, #6d5bff 0%, #d946ef 100%);
-    color: #fff; border: none; border-radius: 10px; cursor: pointer;
-    font-size: 14px; font-weight: 600; flex-shrink: 0;
-    box-shadow: 0 2px 10px rgba(217, 70, 239, 0.35);
-  }
-  button.send:disabled { background: #4b4570; box-shadow: none; cursor: not-allowed; }
+  .status-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 
-  @media (max-width: 480px) {
-    .logo h1 { font-size: 15px; }
-    .msg { max-width: 92%; font-size: 14px; }
-    button.send { padding: 0 14px; }
-    .code-block pre { font-size: 12px; }
+  .chip{
+    display:flex; align-items:center; gap:7px;
+    font-family:var(--mono); font-size:11px; letter-spacing:0.06em;
+    padding:6px 10px; border:1px solid var(--border); border-radius:3px; background:var(--panel-raised);
+  }
+
+  .chip .name{ font-weight:700; }
+  .chip .role{ color:var(--text-dim); font-size:9.5px; }
+
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--text-dim); flex:0 0 auto; }
+  .dot.searching, .dot.working{ animation:pulse 1s ease-in-out infinite; }
+  .dot.searching{ background:var(--amber); }
+  .dot.working.mimo-dot{ background:var(--mimo); box-shadow:0 0 8px var(--mimo); }
+  .dot.working.gini-dot{ background:var(--gini); box-shadow:0 0 8px var(--gini); }
+  .dot.online{ background:var(--gini); box-shadow:0 0 8px var(--gini); }
+  .dot.offline{ background:var(--red); box-shadow:0 0 8px var(--red); }
+  .dot.idle{ background:var(--text-dim); }
+
+  @keyframes pulse{ 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:0.35; transform:scale(0.8);} }
+  @media (prefers-reduced-motion: reduce){ .dot.searching, .dot.working{ animation:none; } }
+
+  /* ---------- Chat log ---------- */
+  main{ flex:1 1 auto; overflow-y:auto; padding:24px 16px 12px; display:flex; flex-direction:column; gap:16px; }
+
+  .msg{ max-width:82%; padding:12px 15px; border-radius:8px; line-height:1.6; font-size:14.5px; white-space:pre-wrap; word-break:break-word; }
+
+  .msg.user{ align-self:flex-end; background:#1c2a3a; border:1px solid #2a3d52; }
+  .msg.mimo{ align-self:flex-start; background:var(--panel-raised); border:1px solid var(--mimo-dim); border-left:3px solid var(--mimo); }
+  .msg.gini{ align-self:flex-start; background:var(--panel-raised); border:1px solid var(--gini-dim); border-left:3px solid var(--gini); width:min(82%, 640px); }
+  .msg.system{ align-self:center; background:transparent; border:1px dashed var(--border); color:var(--text-dim); font-family:var(--mono); font-size:11.5px; letter-spacing:0.04em; text-align:center; }
+
+  .role-tag{ display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; letter-spacing:0.1em; margin-bottom:6px; }
+  .role-tag.mimo-tag{ color:var(--mimo); }
+  .role-tag.gini-tag{ color:var(--gini); }
+
+  .thinking{ display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px; color:var(--text-dim); }
+  .thinking .bar{ display:flex; gap:3px; }
+  .thinking .bar span{ width:5px; height:5px; border-radius:50%; background:var(--mimo); animation:bounce 1.1s infinite ease-in-out; }
+  .thinking .bar span:nth-child(2){ animation-delay:0.15s; }
+  .thinking .bar span:nth-child(3){ animation-delay:0.3s; }
+  @keyframes bounce{ 0%,60%,100%{ transform:translateY(0); opacity:0.4; } 30%{ transform:translateY(-4px); opacity:1; } }
+
+  /* ---------- Clarify card (blueprint style) ---------- */
+  .clarify-card{
+    align-self:flex-start; width:min(82%, 560px);
+    background:
+      linear-gradient(rgba(122,162,255,0.05), rgba(122,162,255,0.05)),
+      repeating-linear-gradient(0deg, rgba(122,162,255,0.06) 0px, rgba(122,162,255,0.06) 1px, transparent 1px, transparent 18px),
+      repeating-linear-gradient(90deg, rgba(122,162,255,0.06) 0px, rgba(122,162,255,0.06) 1px, transparent 1px, transparent 18px),
+      var(--panel-raised);
+    border:1px solid var(--mimo-dim);
+    border-radius:8px;
+    padding:16px;
+  }
+
+  .clarify-card .heading{ font-family:var(--mono); font-size:11px; color:var(--mimo); letter-spacing:0.08em; margin-bottom:12px; }
+
+  .clarify-q{ margin-bottom:14px; }
+  .clarify-q .q-text{ font-size:13.5px; margin-bottom:8px; }
+  .opt-row{ display:flex; flex-wrap:wrap; gap:8px; }
+
+  .opt-btn{
+    font-family:var(--sans); font-size:13px; color:var(--text);
+    background:var(--panel-raised-2); border:1px solid var(--border); border-radius:5px;
+    padding:7px 12px; cursor:pointer; transition:all 0.15s ease;
+  }
+  .opt-btn:hover{ border-color:var(--mimo); }
+  .opt-btn.selected{ background:var(--mimo-dim); border-color:var(--mimo); color:#fff; }
+
+  .clarify-submit{
+    margin-top:6px; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; font-weight:700;
+    background:var(--mimo); color:#0a1020; border:none; border-radius:5px; padding:9px 16px; cursor:pointer;
+  }
+  .clarify-submit:disabled{ opacity:0.35; cursor:not-allowed; }
+
+  /* ---------- Code panel ---------- */
+  .code-panel{ align-self:flex-start; width:min(82%, 700px); border:1px solid var(--gini-dim); border-radius:8px; overflow:hidden; }
+
+  .code-header{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel-raised-2); padding:8px 12px; border-bottom:1px solid var(--gini-dim);
+    font-family:var(--mono); font-size:11px; color:var(--text-dim);
+  }
+  .code-header .code-title{ color:var(--gini); font-weight:700; letter-spacing:0.05em; }
+  .code-actions{ display:flex; gap:8px; }
+  .code-actions button{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.04em;
+    background:transparent; border:1px solid var(--border); color:var(--text-dim);
+    border-radius:4px; padding:4px 9px; cursor:pointer; transition:all 0.15s ease;
+  }
+  .code-actions button:hover{ border-color:var(--gini); color:var(--gini); }
+
+  pre.code-body{
+    margin:0; padding:14px; max-height:420px; overflow:auto;
+    background:#0d1210; font-family:var(--mono); font-size:12.5px; line-height:1.55; color:#d6e8dc;
+  }
+
+  .generate-btn{
+    align-self:flex-start; margin-top:2px;
+    font-family:var(--mono); font-size:11.5px; letter-spacing:0.06em; font-weight:700;
+    background:var(--gini); color:#06120c; border:none; border-radius:5px;
+    padding:9px 16px; cursor:pointer;
+  }
+  .generate-btn:hover{ opacity:0.85; }
+  .generate-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+
+  /* ---------- Composer ---------- */
+  footer{ flex:0 0 auto; border-top:1px solid var(--border); background:var(--panel); padding:12px 16px; }
+  .composer{ display:flex; gap:10px; align-items:flex-end; }
+
+  textarea{
+    flex:1 1 auto; resize:none; min-height:44px; max-height:140px;
+    background:var(--panel-raised); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    font-family:var(--sans); font-size:14.5px; padding:11px 12px; line-height:1.4;
+  }
+  textarea:focus{ outline:2px solid var(--mimo); outline-offset:1px; }
+
+  button#send{
+    flex:0 0 auto; background:var(--mimo); color:#08101f; border:none; border-radius:6px;
+    font-family:var(--mono); font-weight:700; font-size:12px; letter-spacing:0.08em;
+    padding:0 18px; height:44px; cursor:pointer; transition:opacity 0.15s ease;
+  }
+  button#send:disabled{ opacity:0.4; cursor:not-allowed; }
+  button#send:not(:disabled):hover{ opacity:0.85; }
+  button#send:focus-visible{ outline:2px solid var(--text); outline-offset:2px; }
+
+  .hint{ font-family:var(--mono); font-size:10px; color:var(--text-dim); margin-top:6px; letter-spacing:0.04em; }
+
+  main::-webkit-scrollbar{ width:8px; }
+  main::-webkit-scrollbar-thumb{ background:var(--border); border-radius:4px; }
+
+  @media (max-width:640px){
+    .msg, .clarify-card, .code-panel{ max-width:94%; width:94%; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
-    <div class="logo-icon">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="9" cy="10" r="1.2" fill="white"/>
-        <circle cx="15" cy="10" r="1.2" fill="white"/>
-        <path d="M8 14C8 14 9.5 15.5 12 15.5C14.5 15.5 16 14 16 14" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <h1>GiniAi</h1>
+  <div class="brand">
+    <span class="title">TRANSMISSION</span>
+    <span class="sub">MIMO + GINIAI · LIVE COLAB UPLINK</span>
   </div>
-  <span><span id="statusDot"></span><span id="statusText">Connecting...</span></span>
+  <div class="status-row">
+    <div class="chip" id="tunnelChip">
+      <span class="dot searching" id="tunnelDot"></span>
+      <div><span class="name">LINK</span><br><span class="role" id="tunnelText">searching</span></div>
+    </div>
+    <div class="chip" id="mimoChip">
+      <span class="dot idle mimo-dot" id="mimoDot"></span>
+      <div><span class="name" style="color:var(--mimo)">MIMO</span><br><span class="role" id="mimoStatusText">idle · architecture</span></div>
+    </div>
+    <div class="chip" id="giniChip">
+      <span class="dot idle gini-dot" id="giniDot"></span>
+      <div><span class="name" style="color:var(--gini)">GiniAi</span><br><span class="role" id="giniStatusText">idle · code</span></div>
+    </div>
+  </div>
 </header>
 
-<div id="chatArea">
-  <div class="empty-state" id="emptyState">
-    <div class="mascot">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="9" cy="10" r="1.4" fill="white"/>
-        <circle cx="15" cy="10" r="1.4" fill="white"/>
-        <path d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <h2>Your Smart AI Assistant</h2>
-    <p>Ask me anything to get started</p>
-  </div>
-</div>
+<main id="log"></main>
 
-<form id="chatForm">
-  <textarea id="messageInput" placeholder="Message Gini AI..." rows="1"></textarea>
-  <button type="submit" class="send" id="sendBtn">Send</button>
-</form>
+<footer>
+  <div class="composer">
+    <textarea id="input" placeholder="Describe the website you want…" rows="1"></textarea>
+    <button id="send">SEND</button>
+  </div>
+  <div class="hint" id="hint">Waiting for tunnel address…</div>
+</footer>
 
 <script>
-  const TUNNEL_JSON_URL = "https://raw.githubusercontent.com/Spacklight/Tunnel/main/config/tunnel.json";
-  let tunnelUrl = null;
+/* =====================================================================
+   CONFIG
+   ===================================================================== */
+const TUNNEL_JSON_URL = "https://spacklight.github.io/Tunnel/config/tunnel.json";
+const TUNNEL_POLL_MS = 20000;
+const STATUS_POLL_MS = 6000;
 
-  const chatArea = document.getElementById("chatArea");
-  const emptyState = document.getElementById("emptyState");
-  const form = document.getElementById("chatForm");
-  const input = document.getElementById("messageInput");
-  const sendBtn = document.getElementById("sendBtn");
-  const statusDot = document.getElementById("statusDot");
-  const statusText = document.getElementById("statusText");
+const state = {
+  tunnelUrl: null,
+  tunnelState: "searching", // searching | online | offline
+  originalRequest: null,
+  lastArchitecture: null,
+  sending: false,
+};
 
-  function removeEmptyState() {
-    if (emptyState) emptyState.remove();
+const el = {
+  log: document.getElementById("log"),
+  input: document.getElementById("input"),
+  send: document.getElementById("send"),
+  hint: document.getElementById("hint"),
+  tunnelDot: document.getElementById("tunnelDot"),
+  tunnelText: document.getElementById("tunnelText"),
+  mimoDot: document.getElementById("mimoDot"),
+  mimoStatusText: document.getElementById("mimoStatusText"),
+  giniDot: document.getElementById("giniDot"),
+  giniStatusText: document.getElementById("giniStatusText"),
+};
+
+/* ---------- Status helpers ---------- */
+function setTunnelState(s, note) {
+  state.tunnelState = s;
+  el.tunnelDot.className = "dot " + s;
+  el.tunnelText.textContent = s;
+  if (note) el.hint.textContent = note;
+}
+
+function setModelStatus(modelKey, working) {
+  if (modelKey === "MIMO") {
+    el.mimoDot.className = "dot mimo-dot " + (working ? "working" : "idle");
+    el.mimoStatusText.textContent = (working ? "working" : "idle") + " · architecture";
+  } else if (modelKey === "GiniAi") {
+    el.giniDot.className = "dot gini-dot " + (working ? "working" : "idle");
+    el.giniStatusText.textContent = (working ? "working" : "idle") + " · code";
   }
+}
 
-  function escapeHtml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+/* ---------- Message rendering ---------- */
+function scrollDown() { el.log.scrollTop = el.log.scrollHeight; }
+
+function addMessage(role, content) {
+  const wrap = document.createElement("div");
+  wrap.className = "msg " + role;
+  if (role === "user") {
+    wrap.textContent = content;
+  } else {
+    wrap.textContent = content;
   }
+  el.log.appendChild(wrap);
+  scrollDown();
+  return wrap;
+}
 
-  // Detects ```lang ... ``` fenced blocks and text in between, and renders
-  // each piece appropriately (plain text vs formatted code block).
-  function renderMessageContent(container, rawText) {
-    container.innerHTML = "";
-    const fenceRegex = /```(\w*)\n?([\s\S]*?)```/g;
-    let lastIndex = 0;
-    let match;
-    let blockCount = 0;
+function addThinkingBubble(label, tagClass) {
+  const wrap = document.createElement("div");
+  wrap.className = "msg mimo";
+  wrap.innerHTML = `
+    <div class="role-tag mimo-tag">MIMO</div>
+    <div class="thinking"><span>${label}</span><div class="bar"><span></span><span></span><span></span></div></div>
+  `;
+  el.log.appendChild(wrap);
+  scrollDown();
+  return wrap;
+}
 
-    while ((match = fenceRegex.exec(rawText)) !== null) {
-      // Plain text before this code block
-      if (match.index > lastIndex) {
-        const textNode = document.createElement("span");
-        textNode.textContent = rawText.slice(lastIndex, match.index);
-        container.appendChild(textNode);
-      }
+function renderArchitectureResult(bubble, text) {
+  bubble.innerHTML = `<div class="role-tag mimo-tag">MIMO</div><div class="arch-text"></div>`;
+  bubble.querySelector(".arch-text").textContent = text;
 
-      const lang = (match[1] || "code").trim();
-      const code = match[2];
-      blockCount++;
-      const blockId = `code-${Date.now()}-${blockCount}`;
+  const btn = document.createElement("button");
+  btn.className = "generate-btn";
+  btn.textContent = "GENERATE CODE WITH GINIAI →";
+  btn.addEventListener("click", () => {
+    btn.disabled = true;
+    requestCode(text);
+  });
+  const holder = document.createElement("div");
+  holder.style.marginTop = "10px";
+  holder.appendChild(btn);
+  el.log.appendChild(holder);
+  scrollDown();
+}
 
-      const wrapper = document.createElement("div");
-      wrapper.className = "code-block";
+function renderClarifyCard(bubble, questions) {
+  bubble.remove(); // drop the thinking bubble, replace with a proper card
 
-      const isFullHtmlPage = /<html[\s>]/i.test(code);
+  const card = document.createElement("div");
+  card.className = "clarify-card";
 
-      wrapper.innerHTML = `
-        <div class="code-block-header">
-          <span class="code-block-lang">${escapeHtml(lang || "code")}</span>
-          <div class="code-block-actions">
-            ${isFullHtmlPage ? `<button type="button" class="code-btn" data-action="preview" data-target="${blockId}">Preview</button>` : ""}
-            <button type="button" class="code-btn" data-action="copy" data-target="${blockId}">Copy</button>
-          </div>
-        </div>
-        <pre><code id="${blockId}">${escapeHtml(code)}</code></pre>
-        ${isFullHtmlPage ? `<iframe class="code-preview-frame" id="${blockId}-frame"></iframe>` : ""}
-      `;
-      container.appendChild(wrapper);
+  const heading = document.createElement("div");
+  heading.className = "heading";
+  heading.textContent = "MIMO NEEDS A FEW DETAILS";
+  card.appendChild(heading);
 
-      lastIndex = fenceRegex.lastIndex;
-    }
+  const answers = new Array(questions.length).fill(null);
 
-    // Remaining plain text after the last code block
-    if (lastIndex < rawText.length) {
-      const textNode = document.createElement("span");
-      textNode.className = "cursor";
-      textNode.textContent = rawText.slice(lastIndex);
-      container.appendChild(textNode);
-    } else if (blockCount === 0) {
-      // No code blocks at all — whole message is plain streaming text
-      const textNode = document.createElement("span");
-      textNode.className = "cursor";
-      textNode.textContent = rawText;
-      container.appendChild(textNode);
-    }
-  }
+  questions.forEach((q, qi) => {
+    const qWrap = document.createElement("div");
+    qWrap.className = "clarify-q";
 
-  // Event delegation for Copy / Preview buttons inside any message
-  chatArea.addEventListener("click", (e) => {
-    const btn = e.target.closest(".code-btn");
-    if (!btn) return;
-    const action = btn.dataset.action;
-    const targetId = btn.dataset.target;
+    const qText = document.createElement("div");
+    qText.className = "q-text";
+    qText.textContent = q.question;
+    qWrap.appendChild(qText);
 
-    if (action === "copy") {
-      const codeEl = document.getElementById(targetId);
-      navigator.clipboard.writeText(codeEl.textContent).then(() => {
-        const original = btn.textContent;
-        btn.textContent = "Copied!";
-        setTimeout(() => { btn.textContent = original; }, 1500);
+    const optRow = document.createElement("div");
+    optRow.className = "opt-row";
+
+    (q.options || []).forEach((opt) => {
+      const optBtn = document.createElement("button");
+      optBtn.className = "opt-btn";
+      optBtn.textContent = opt;
+      optBtn.addEventListener("click", () => {
+        optRow.querySelectorAll(".opt-btn").forEach(b => b.classList.remove("selected"));
+        optBtn.classList.add("selected");
+        answers[qi] = opt;
+        submitBtn.disabled = answers.some(a => a === null);
       });
-    }
+      optRow.appendChild(optBtn);
+    });
 
-    if (action === "preview") {
-      const codeEl = document.getElementById(targetId);
-      const frame = document.getElementById(targetId + "-frame");
-      const pre = codeEl.closest("pre");
-      const isActive = frame.classList.contains("active");
-
-      if (isActive) {
-        frame.classList.remove("active");
-        pre.style.display = "block";
-        btn.textContent = "Preview";
-      } else {
-        frame.srcdoc = codeEl.textContent;
-        frame.classList.add("active");
-        pre.style.display = "none";
-        btn.textContent = "Show Code";
-      }
-    }
+    qWrap.appendChild(optRow);
+    card.appendChild(qWrap);
   });
 
-  function addMessage(role, text) {
-    removeEmptyState();
-    const div = document.createElement("div");
-    div.className = `msg ${role}`;
-    if (role === "user") {
-      div.textContent = text;
-    } else {
-      renderMessageContent(div, text);
+  const submitBtn = document.createElement("button");
+  submitBtn.className = "clarify-submit";
+  submitBtn.textContent = "CONTINUE";
+  submitBtn.disabled = true;
+  submitBtn.addEventListener("click", () => {
+    submitBtn.disabled = true;
+    const summary = questions.map((q, i) => `${q.question} ${answers[i]}`).join("\n");
+    const followUp = `${state.originalRequest}\n\nAdditional details:\n${summary}`;
+    addMessage("system", "Answers sent to MIMO.");
+    requestArchitecture(followUp);
+  });
+  card.appendChild(submitBtn);
+
+  el.log.appendChild(card);
+  scrollDown();
+}
+
+function createCodePanel() {
+  const panel = document.createElement("div");
+  panel.className = "code-panel";
+  panel.innerHTML = `
+    <div class="code-header">
+      <span class="code-title">GiniAi — generating…</span>
+      <div class="code-actions">
+        <button class="copy-btn">COPY</button>
+        <button class="download-btn">DOWNLOAD</button>
+      </div>
+    </div>
+    <pre class="code-body"><code></code></pre>
+  `;
+  el.log.appendChild(panel);
+  scrollDown();
+
+  const codeEl = panel.querySelector("code");
+  const titleEl = panel.querySelector(".code-title");
+  const copyBtn = panel.querySelector(".copy-btn");
+  const downloadBtn = panel.querySelector(".download-btn");
+
+  copyBtn.addEventListener("click", () => {
+    navigator.clipboard.writeText(codeEl.textContent).then(() => {
+      copyBtn.textContent = "COPIED";
+      setTimeout(() => (copyBtn.textContent = "COPY"), 1500);
+    });
+  });
+
+  downloadBtn.addEventListener("click", () => {
+    const blob = new Blob([codeEl.textContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "generated_site.html";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  return { panel, codeEl, titleEl };
+}
+
+/* ---------- SSE streaming ---------- */
+async function streamSSE(url, body, onEvent, onError) {
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok || !res.body) {
+      onError(`HTTP ${res.status}`);
+      return;
     }
-    chatArea.appendChild(div);
-    chatArea.scrollTop = chatArea.scrollHeight;
-    return div;
-  }
-
-  function addThinkingBubble() {
-    const div = document.createElement("div");
-    div.className = "msg ai";
-    div.innerHTML = `<span class="thinking"><span></span><span></span><span></span></span>`;
-    chatArea.appendChild(div);
-    chatArea.scrollTop = chatArea.scrollHeight;
-    return div;
-  }
-
-  async function refreshTunnelUrl() {
-    try {
-      const res = await fetch(TUNNEL_JSON_URL + "?t=" + Date.now());
-      const data = await res.json();
-      tunnelUrl = data.url;
-      statusDot.className = "online";
-      statusText.textContent = "Online";
-      return true;
-    } catch (err) {
-      statusDot.className = "offline";
-      statusText.textContent = "Offline";
-      return false;
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop();
+      for (const part of parts) {
+        const line = part.trim();
+        if (!line.startsWith("data:")) continue;
+        const jsonStr = line.slice(5).trim();
+        try {
+          onEvent(JSON.parse(jsonStr));
+        } catch (e) { /* ignore malformed chunk */ }
+      }
     }
+  } catch (err) {
+    onError(err.message);
   }
+}
 
-  async function sendMessage(message) {
-    addMessage("user", message);
-    const aiDiv = addThinkingBubble();
-    let hasStartedStreaming = false;
-    let fullText = "";
+/* ---------- Model requests ---------- */
+function requestArchitecture(promptText) {
+  if (!state.tunnelUrl) {
+    addMessage("system", "No live backend connection — message not sent.");
+    return;
+  }
+  const bubble = addThinkingBubble("MIMO is thinking");
+  setModelStatus("MIMO", true);
 
-    sendBtn.disabled = true;
-
-    try {
-      if (!tunnelUrl) {
-        const ok = await refreshTunnelUrl();
-        if (!ok) throw new Error("Could not reach tunnel");
-      }
-
-      const response = await fetch(tunnelUrl + "/chat/stream", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
-      });
-
-      if (!response.ok || !response.body) {
-        throw new Error("Server did not respond");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop();
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const text = line.slice(6);
-            if (text === "[DONE]") continue;
-
-            if (!hasStartedStreaming) {
-              aiDiv.innerHTML = "";
-              aiDiv.classList.add("streaming");
-              hasStartedStreaming = true;
-            }
-            fullText += text;
-            // Re-render on every chunk so code fences get formatted live as they complete
-            renderMessageContent(aiDiv, fullText);
-            chatArea.scrollTop = chatArea.scrollHeight;
-          }
+  streamSSE(
+    state.tunnelUrl.replace(/\/$/, "") + "/architecture",
+    { prompt: promptText },
+    (evt) => {
+      if (evt.event === "status") {
+        setModelStatus(evt.model, evt.state === "working");
+      } else if (evt.event === "done") {
+        setModelStatus("MIMO", false);
+        if (evt.type === "clarification" && evt.questions && evt.questions.length) {
+          renderClarifyCard(bubble, evt.questions);
+        } else {
+          state.lastArchitecture = evt.full_text || "";
+          renderArchitectureResult(bubble, state.lastArchitecture);
         }
       }
-    } catch (err) {
-      aiDiv.classList.remove("streaming");
-      aiDiv.textContent = "Error: " + err.message + " — trying to reconnect...";
-      await refreshTunnelUrl();
-    } finally {
-      aiDiv.classList.remove("streaming");
-      sendBtn.disabled = false;
-      input.focus();
+    },
+    (errMsg) => {
+      setModelStatus("MIMO", false);
+      bubble.innerHTML = `<div class="role-tag mimo-tag">MIMO</div><div>Something went wrong: ${errMsg}</div>`;
     }
+  );
+}
+
+function requestCode(architectureText) {
+  setModelStatus("GiniAi", true);
+  const { panel, codeEl, titleEl } = createCodePanel();
+
+  const prompt = `Website request: ${state.originalRequest}\n\nArchitecture plan:\n${architectureText}\n\nGenerate the complete code for this website.`;
+
+  streamSSE(
+    state.tunnelUrl.replace(/\/$/, "") + "/generate",
+    { prompt },
+    (evt) => {
+      if (evt.event === "status") {
+        setModelStatus(evt.model, evt.state === "working");
+      } else if (evt.event === "token") {
+        codeEl.textContent += evt.text;
+        panel.querySelector(".code-body").scrollTop = panel.querySelector(".code-body").scrollHeight;
+      } else if (evt.event === "done") {
+        setModelStatus("GiniAi", false);
+        titleEl.textContent = "GiniAi — generated_site.html";
+      }
+    },
+    (errMsg) => {
+      setModelStatus("GiniAi", false);
+      titleEl.textContent = "GiniAi — failed";
+      codeEl.textContent += `\n\n/* Error: ${errMsg} */`;
+    }
+  );
+}
+
+/* ---------- Tunnel discovery ---------- */
+async function fetchTunnelUrl() {
+  try {
+    const res = await fetch(TUNNEL_JSON_URL + `?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const data = await res.json();
+    if (!data.url) throw new Error("no url field");
+
+    const changed = state.tunnelUrl !== null && data.url !== state.tunnelUrl;
+    state.tunnelUrl = data.url;
+    if (changed) addMessage("system", `Tunnel address updated: ${data.url}`);
+
+    await pingBackend();
+  } catch (err) {
+    setTunnelState("offline", `Could not read tunnel.json (${err.message}).`);
   }
+}
 
-  form.addEventListener("submit", (e) => {
+async function pingBackend() {
+  if (!state.tunnelUrl) return;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(state.tunnelUrl, { method: "GET", signal: controller.signal });
+    clearTimeout(timeout);
+    setTunnelState("online", `Connected: ${state.tunnelUrl}`);
+  } catch (err) {
+    setTunnelState("offline", "Tunnel address known but backend not responding yet. Retrying…");
+  }
+}
+
+async function pollStatus() {
+  if (!state.tunnelUrl || state.tunnelState !== "online") return;
+  try {
+    const res = await fetch(state.tunnelUrl.replace(/\/$/, "") + "/status");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.MIMO) setModelStatus("MIMO", data.MIMO === "working");
+    if (data.GiniAi) setModelStatus("GiniAi", data.GiniAi === "working");
+  } catch (err) { /* silent — heartbeat only */ }
+}
+
+/* ---------- Composer wiring ---------- */
+function sendMessage() {
+  const text = el.input.value.trim();
+  if (!text || state.sending) return;
+  if (!state.tunnelUrl || state.tunnelState === "offline") {
+    addMessage("system", "No live backend connection — message not sent.");
+    return;
+  }
+  addMessage("user", text);
+  state.originalRequest = text;
+  el.input.value = "";
+  el.input.style.height = "auto";
+  requestArchitecture(text);
+}
+
+el.send.addEventListener("click", sendMessage);
+el.input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    const message = input.value.trim();
-    if (!message) return;
-    input.value = "";
-    input.style.height = "auto";
-    sendMessage(message);
-  });
+    sendMessage();
+  }
+});
+el.input.addEventListener("input", () => {
+  el.input.style.height = "auto";
+  el.input.style.height = Math.min(el.input.scrollHeight, 140) + "px";
+});
 
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      form.requestSubmit();
-    }
-  });
-
-  input.addEventListener("input", () => {
-    input.style.height = "auto";
-    input.style.height = input.scrollHeight + "px";
-  });
-
-  refreshTunnelUrl();
+/* ---------- Boot ---------- */
+addMessage("system", "Waiting for tunnel address from GitHub Pages…");
+fetchTunnelUrl();
+setInterval(fetchTunnelUrl, TUNNEL_POLL_MS);
+setInterval(pollStatus, STATUS_POLL_MS);
 </script>
-
 </body>
 </html>
